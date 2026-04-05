@@ -99,6 +99,10 @@ EndProcedure
 
 Procedure ExeItems(IIKOObject, ActiveConnection)
 	
+	If IIKOObject.returnValue.customers.Properties().Get("i") = Undefined Then
+		like_CommonAtServer.LogWrite("Customers list have no items.");
+		Return;
+	EndIf;
 	customers = IIKOObject.returnValue.customers.i;
 	
 	If TypeOf(customers) = Type("XDTOList") Then

@@ -222,29 +222,6 @@ Procedure SetEntititesVersion(connection, eVersion)
 	
 EndProcedure
 
-Procedure FillParents(catalogName)
-	
-	emptyParentQuery = New Query("SELECT
-	                             |	like_products.Ref AS Entity,
-	                             |	like_parents.Ref AS Parent
-	                             |FROM
-	                             |	Catalog.[catalogName] AS like_products
-	                             |		LEFT JOIN Catalog.[catalogName] AS like_parents
-	                             |		ON (like_parents.UUID = like_products.parentID)
-	                             |			AND (like_parents.connection = like_products.connection)
-	                             |WHERE
-	                             |	like_products.parentID <> """"
-	                             |	AND like_products.Parent = VALUE(Catalog.[catalogName].EmptyRef)");
-	emptyParentQuery.Text = StrReplace(emptyParentQuery.Text, "[catalogName]", catalogName);
-	emptyParentSelection = emptyParentQuery.Execute().Select();
-	While emptyParentSelection.Next() Do
-		entityObject = emptyParentSelection.Entity.GetObject();
-		entityObject.Parent = emptyParentSelection.Parent;
-		entityObject.Write();
-	EndDo;
-	
-EndProcedure
-
 Function FillRefs(entitiesTable)
 	
 	fQuery = New Query("SELECT
@@ -457,7 +434,9 @@ Procedure ExeItems(updateItems, connection, revision) Export
 				entity = Catalogs[entityItem.catalogName].CreateFolder();
 			Else
 				entity = Catalogs[entityItem.catalogName].CreateItem();
-			EndIf;
+			EndIf;                                                        
+			newRef = Catalogs[entityItem.catalogName].GetRef(New UUID(entityItem.UUID));
+			entity.SetNewObjectRef(newRef);
 			entity.revision   = -1;
 		Else
 			entity = entityItem.Ref.GetObject();
@@ -466,13 +445,14 @@ Procedure ExeItems(updateItems, connection, revision) Export
 		If entityItem.revision > entity.revision Then
 			excludeFields = ?(entityItem.isContainer, "accountingCategoryID,mainUnitID,type", "");
 			FillPropertyValues(entity, entityItem,, excludeFields);
+			If entity.Metadata().Attributes.Find("ParentID") <> Undefined Then
+				If entity.Parent.isEmpty() AND ValueIsFilled(entity.ParentID) Then
+					entity.Parent = Catalogs[entityItem.catalogName].GetRef(New UUID(entity.ParentID));
+				EndIf;
+			EndIf;
 			entity.Write();
 		EndIf;	
 	EndDo;
-	
-	FillParents("like_accounts");
-	FillParents("like_products");
-	FillParents("like_stores");
 	
 	SetEntititesVersion(connection, revision);	
 	

@@ -84,7 +84,9 @@ Function GetPrepaysData()
 		                         |	customers.Ref");
 		prepaysQuery.SetParameter("prepays", prepaysData);
 		prepaysQuery.SetParameter("pdate", prepaysDate);
-		prepaysData = prepaysQuery.Execute().Unload();	
+		prepaysData = prepaysQuery.Execute().Unload();
+		
+		prepaysSummarySum = prepaysData.Total("sum");
 	EndIf;
 	
 	Return prepaysData;
@@ -100,8 +102,8 @@ Function salesRequest()
 	|	OPE.cashRegister AS cashRegisterId,
 	|	OPE.isBanquet,
 	|	OPE.isDelivery,
-	|	OPE.nonCashPaymentType AS nonCashPaymentTypeId,
 	|	OPE.orderSum,
+	|	OPE.orderSumAfterDiscount,
 	|	OPE.session_id,
 	|	OPE.sumCard,
 	|	OPE.sumCash,
@@ -144,9 +146,9 @@ Function GetSalesData()
 									 "|cashRegister;cashRegister"+
 									 "|isBanquet;boolInt"+
 									 "|isDelivery;boolInt"+
-									 "|nonCashPaymentTypeId;UUID"+
 									 "|paymentType;paymentType"+
 									 "|orderSum;sum"+
+									 "|orderSumAfterDiscount;sum"+
 									 "|session_id;UUID"+
 									 "|sumCard;sum"+
 									 "|sumCash;sum"+
@@ -172,8 +174,8 @@ Function GetSalesData()
 		                       |	s.cashRegisterId AS cashRegisterId,
 		                       |	s.isBanquet AS isBanquet,
 		                       |	s.isDelivery AS isDelivery,
-		                       |	s.nonCashPaymentTypeId AS nonCashPaymentTypeId,
 		                       |	s.orderSum AS orderSum,
+		                       |	s.orderSumAfterDiscount AS orderSumAfterDiscount,
 		                       |	s.session_id AS session_id,
 		                       |	s.sumCard AS sumCard,
 		                       |	s.sumCash AS sumCash,
@@ -196,12 +198,12 @@ Function GetSalesData()
 		                       |////////////////////////////////////////////////////////////////////////////////
 		                       |SELECT
 		                       |	&pdate AS pdate,
-		                       |	departments.Ref AS department,
-		                       |	cashRegisters.Ref AS cashRegister,
+							   |	departments.Ref AS department,
+							   |	cashRegisters.Ref AS cashRegister,
 		                       |	Sales.isBanquet AS isBanquet,
 		                       |	Sales.isDelivery AS isDelivery,
-		                       |	paymentTypes.Ref AS paymentType,
 		                       |	Sales.orderSum AS orderSum,
+		                       |	Sales.orderSumAfterDiscount AS orderSumAfterDiscount,
 		                       |	Sales.session_id AS session_id,
 		                       |	Sales.sumCard AS sumCard,
 		                       |	Sales.sumCash AS sumCash,
@@ -209,42 +211,100 @@ Function GetSalesData()
 		                       |	Sales.sumPrepay AS sumPrepay,
 		                       |	conceptions.Ref AS conception,
 		                       |	Sales.dishAmount AS dishAmount,
-		                       |	products.Ref AS product,
+							   |	products.Ref AS product,
 		                       |	Sales.dishSum AS dishSum,
 		                       |	Sales.nds AS nds,
 		                       |	Sales.ndsSum AS ndsSum,
 		                       |	Sales.orderId AS orderId,
-		                       |	stores.Ref AS store,
-		                       |	customers.Ref AS customer
+							   |	stores.Ref AS store,
+							   |	customers.Ref AS customer
+		                       |INTO salesData
 		                       |FROM
 		                       |	tmpSales AS Sales
-		                       |		INNER JOIN Catalog.like_departments AS departments
-		                       |		ON Sales.departmentId = departments.UUID
-		                       |		INNER JOIN Catalog.like_cashRegisters AS cashRegisters
-		                       |		ON Sales.cashRegisterId = cashRegisters.UUID
-		                       |		LEFT JOIN Catalog.like_paymentTypes AS paymentTypes
-		                       |		ON Sales.nonCashPaymentTypeId = paymentTypes.UUID
-		                       |		LEFT JOIN Catalog.like_conceptions AS conceptions
-		                       |		ON Sales.conceptionId = conceptions.UUID
-		                       |		INNER JOIN Catalog.like_products AS products
-		                       |		ON Sales.dishId = products.UUID
-		                       |		INNER JOIN Catalog.like_stores AS stores
-		                       |		ON Sales.storeId = stores.UUID
-		                       |		LEFT JOIN Catalog.like_customers AS customers
-		                       |		ON Sales.customerId = customers.UUID");
+							   |		INNER JOIN Catalog.like_departments AS departments
+							   |		ON Sales.departmentId = departments.UUID
+							   |		INNER JOIN Catalog.like_cashRegisters AS cashRegisters
+							   |		ON Sales.cashRegisterId = cashRegisters.UUID
+							   |		LEFT JOIN Catalog.like_conceptions AS conceptions
+							   |		ON Sales.conceptionId = conceptions.UUID
+							   |		INNER JOIN Catalog.like_products AS products
+							   |		ON Sales.dishId = products.UUID
+							   |		INNER JOIN Catalog.like_stores AS stores
+							   |		ON Sales.storeId = stores.UUID
+							   |		LEFT JOIN Catalog.like_customers AS customers
+							   |		ON Sales.customerId = customers.UUID
+		                       |;
+		                       |
+		                       |////////////////////////////////////////////////////////////////////////////////
+		                       |SELECT DISTINCT
+		                       |	s.pdate AS pdate,
+		                       |	s.session_id AS session_id,
+		                       |	s.orderSum AS orderSum,
+		                       |	s.orderSumAfterDiscount AS orderSumAfterDiscount,
+		                       |	s.orderId AS orderId,
+		                       |	s.sumCard AS sumCard,
+		                       |	s.sumCash AS sumCash,
+		                       |	s.sumCredit AS sumCredit,
+		                       |	s.sumPrepay AS sumPrepay
+		                       |INTO tmpSummary
+		                       |FROM
+		                       |	salesData AS s
+		                       |;
+		                       |
+		                       |////////////////////////////////////////////////////////////////////////////////
+		                       |SELECT
+		                       |	tmpSummary.pdate AS pdate,
+		                       |	SUM(tmpSummary.orderSum) AS salesSummarySum,
+		                       |	SUM(tmpSummary.orderSumAfterDiscount) AS salesSummarySumAfterDiscount,
+		                       |	COUNT(DISTINCT tmpSummary.orderId) AS salesSummaryOrdersNum,
+		                       |	SUM(tmpSummary.sumCard) AS salesSummaryCard,
+		                       |	SUM(tmpSummary.sumCash) AS salesSummaryCash,
+		                       |	SUM(tmpSummary.sumCredit) AS salesSummaryCredit,
+		                       |	SUM(tmpSummary.sumPrepay) AS salesSummaryPrepay
+		                       |INTO salesSummary
+		                       |FROM
+		                       |	tmpSummary AS tmpSummary
+		                       |
+		                       |GROUP BY
+		                       |	tmpSummary.pdate");
 		salesQuery.SetParameter("sales", salesData);
-		salesQuery.SetParameter("pdate", prepaysDate);
-		salesData = salesQuery.Execute().Unload();
+		salesQuery.SetParameter("pdate", prepaysDate);  
+		queryResults = salesQuery.ExecuteBatchWithIntermediateData();
+		Return New Structure("Data, Summary", queryResults[1].Unload(), queryResults[3].Unload());
 	EndIf;
-	Return salesData;
+	
+	Return Undefined;
 	
 EndFunction
 
 &AtServer
 Procedure requestSQLAtServer()
 	
-	prepaysTable.Load(GetPrepaysData());
-	salesTable.Load(GetSalesData());
+	prepays = GetPrepaysData();
+	sales   = GetSalesData();
+	prepaysTable.Load(prepays);
+	
+	If sales <> Undefined Then
+		salesTable.Load(sales.Data);
+		If sales.Summary.Count()>0 Then
+			FillPropertyValues(ThisForm, sales.Summary[0]);
+		EndIf;
+	EndIf;
+	
+EndProcedure
+
+&AtClient
+Procedure NullSummaryData()
+	
+	prepaysSummarySum = 0;
+	
+	salesSummaryCard 			= 0;
+	salesSummaryCash 			= 0;
+	salesSummaryCredit 			= 0;
+	salesSummaryPrepay 			= 0;
+	salesSummarySum				= 0;
+	salesSummarySumAfterDiscount= 0;
+	salesSummaryOrdersNum 		= 0;
 	
 EndProcedure
 
@@ -256,6 +316,7 @@ Procedure prepaysDateOnChange(Item)
 		Return;
 	EndIf;
 	
+	NullSummaryData();
 	requestSQLAtServer();
 	
 EndProcedure

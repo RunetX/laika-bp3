@@ -28,7 +28,7 @@
 			</xr:ContainedObject>
 			<xr:ContainedObject>
 				<xr:ClassId>fb282519-d103-4dd3-bc12-cb271d631dfc</xr:ClassId>
-				<xr:ObjectId>a1ef12fe-8174-4e61-b928-f0d7d5547171</xr:ObjectId>
+				<xr:ObjectId>d8edb3ef-1a47-4c52-9cd7-764ab889c35e</xr:ObjectId>
 			</xr:ContainedObject>
 			<xr:PropertyState>
 				<xr:Property>ManagedApplicationModule</xr:Property>
@@ -36,14 +36,6 @@
 			</xr:PropertyState>
 			<xr:PropertyState>
 				<xr:Property>SessionModule</xr:Property>
-				<xr:State>Extended</xr:State>
-			</xr:PropertyState>
-			<xr:PropertyState>
-				<xr:Property>CommandInterface</xr:Property>
-				<xr:State>Extended</xr:State>
-			</xr:PropertyState>
-			<xr:PropertyState>
-				<xr:Property>MainSectionCommandInterface</xr:Property>
 				<xr:State>Extended</xr:State>
 			</xr:PropertyState>
 		</InternalInfo>
@@ -67,7 +59,7 @@
 			</UsePurposes>
 			<ScriptVariant>English</ScriptVariant>
 			<Vendor>izi.cloud</Vendor>
-			<Version>0.3.3</Version>
+			<Version>0.3.4</Version>
 			<Caption/>
 			<ShortCaption/>
 			<DefaultLanguage>Language.Русский</DefaultLanguage>
