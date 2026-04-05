@@ -28,7 +28,7 @@
 			</xr:ContainedObject>
 			<xr:ContainedObject>
 				<xr:ClassId>fb282519-d103-4dd3-bc12-cb271d631dfc</xr:ClassId>
-				<xr:ObjectId>060dde62-cdf6-4ba2-8c4b-63345ad10ceb</xr:ObjectId>
+				<xr:ObjectId>1f11a327-2de5-4105-be6c-18153645e29d</xr:ObjectId>
 			</xr:ContainedObject>
 			<xr:PropertyState>
 				<xr:Property>ManagedApplicationModule</xr:Property>
@@ -67,7 +67,7 @@
 			</UsePurposes>
 			<ScriptVariant>English</ScriptVariant>
 			<Vendor>izi.cloud</Vendor>
-			<Version>0.3.5</Version>
+			<Version>0.3.6</Version>
 			<Caption/>
 			<ShortCaption/>
 			<DefaultLanguage>Language.Русский</DefaultLanguage>
