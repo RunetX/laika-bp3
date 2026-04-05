@@ -1,5 +1,5 @@
 ﻿///////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019, ООО Изи Клауд, https://izi.cloud
+// Copyright (c) 2021, ООО Изи Клауд, https://izi.cloud
 // All rights reserved. This program and accompanying materials 
 // are subject to license terms Attribution 4.0 International (CC BY 4.0)
 // The license text is available here:
@@ -31,12 +31,13 @@ Function DecompressGZIP(binaryData) Export
 	CompressedFileSize			= MemoryStream.Size();
 	FileTime					= 0;
 	FileDate					= 0;
-	ZIPSize = 98 + CompressedFileNameLength*2 + CompressedFileSize; //98 bytes headers, 2 times file length + compressed body size
+	//98 bytes headers, 2 times file length + compressed body size
+	ZIPSize = 98 + CompressedFileNameLength*2 + CompressedFileSize;
 	BinaryBuffer = New BinaryDataBuffer(ZIPSize);
 	// [Local File Header]
 	FixedPartLengthLFH = 30;
 	
-	BinaryBuffer.WriteInt32(0	, 67324752);				
+	BinaryBuffer.WriteInt32(0	, 67324752);
 	BinaryBuffer.WriteInt16(4	, 20);                      
 	BinaryBuffer.WriteInt16(6	, 2050);                    
 	BinaryBuffer.WriteInt16(8	, 8);                       
@@ -46,7 +47,7 @@ Function DecompressGZIP(binaryData) Export
 	BinaryBuffer.WriteInt32(18	, CompressedFileSize);      
 	BinaryBuffer.WriteInt32(22	, UncompressedFileSize);    
 	BinaryBuffer.WriteInt16(26	, CompressedFileNameLength);
-	BinaryBuffer.WriteInt16(28	, 0);                       				
+	BinaryBuffer.WriteInt16(28	, 0);                       
 	
 	For i = 0 To CompressedFileNameLength - 1 Do
 		BinaryBuffer.Set(FixedPartLengthLFH + i, CharCode(Mid(CompressedFileName, i+1, 1)));
@@ -136,8 +137,19 @@ EndFunction
 
 Function InsertAttr(XMLString, nodeName, attributeName, attributeValue) Export
 
-	XMLString = StrReplace(XMLString, "<"+nodeName+" ", "<"+nodeName+" "+attributeName+"="""+attributeValue+""" "); 
-	Return StrReplace(XMLString, "<"+nodeName+">", "<"+nodeName+" "+attributeName+"="""+attributeValue+""">");
+	XMLString = StrReplace(
+		XMLString,
+		StrTemplate("<%1 ", nodeName),
+		StrTemplate("<%1 %2=""%3"" ", nodeName, attributeName, attributeValue)
+	);
+	
+	XMLString = StrReplace(
+		XMLString,
+		StrTemplate("<%1>", nodeName),
+		StrTemplate("<%1 %2=""%3"">", nodeName, attributeName, attributeValue)
+	);
+	
+	Return XMLString;
 	
 EndFunction
 
@@ -165,3 +177,33 @@ Function IikoDateTimeTo1C(iikoDT) Export
 	Return Date(date+time);
 	
 EndFunction
+
+Function Translit(input) Export
+	
+    rus = "абвгдеёжзийклмнопрстуфхцчшщьыъэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ";
+    eng = "a;b;v;g;d;e;yo;zh;z;i;y;k;l;m;n;o;p;r;s;t;u;f;kh;ts;ch;sh;shch;;y;;e;yu;ya;A;B;V;G;D;E;Yo;Zh;Z;I;Y;K;L;M;N;O;P;R;S;T;U;F;Kh;Ts;Ch;Sh;Shch;;Y;;E;Yu;Ya";
+    engArray 	= StrSplit(eng,";");
+    inputLength = StrLen(input);
+    output = "";
+	
+    For a=1 To inputLength Do    
+        currentChar = Mid(input, a, 1);    
+        position = Find(rus, currentChar);
+        If position > 0 Then 
+            output = output + engArray[position-1];
+        Else 
+            output = output + currentChar;
+        EndIf;
+	EndDo;
+	
+    Return output; 
+	
+EndFunction
+
+Procedure UsrMessage(message) Export
+	
+	userMessage = New UserMessage;
+	userMessage.Text = message;
+	userMessage.Message();
+	 
+EndProcedure

@@ -166,6 +166,31 @@
 				</UsualGroup>
 			</ChildItems>
 		</UsualGroup>
+		<UsualGroup name="Group7" id="45">
+			<Title>
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Версия сервера</v8:content>
+				</v8:item>
+			</Title>
+			<Group>HorizontalIfPossible</Group>
+			<Behavior>Collapsible</Behavior>
+			<Collapsed>true</Collapsed>
+			<Representation>WeakSeparation</Representation>
+			<ExtendedTooltip name="Group7ExtendedTooltip" id="46"/>
+			<ChildItems>
+				<InputField name="edition1" id="47">
+					<DataPath>Object.edition</DataPath>
+					<ContextMenu name="edition1ContextMenu" id="48"/>
+					<ExtendedTooltip name="edition1ExtendedTooltip" id="49"/>
+				</InputField>
+				<InputField name="version1" id="50">
+					<DataPath>Object.version</DataPath>
+					<ContextMenu name="version1ContextMenu" id="51"/>
+					<ExtendedTooltip name="version1ExtendedTooltip" id="52"/>
+				</InputField>
+			</ChildItems>
+		</UsualGroup>
 	</ChildItems>
 	<Attributes>
 		<Attribute name="Object" id="1">

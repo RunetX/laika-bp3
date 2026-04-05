@@ -114,7 +114,8 @@ Procedure OnCreateAtServer(Cancel, StandardProcessing)
 		newInvoiceStr.defaultStoreUUID		 	= d.defaultStore.__content;
 		newInvoiceStr.employeePassToAccountUUID = d.employeePassToAccount.__content;
 		newInvoiceStr.invoice					= d.invoice.__content;
-		newInvoiceStr.incomingDate				= like_Common.iikoDateTimeTo1C(d.incomingDate);
+		newInvoiceStr.incomingDate				= ?(ValueIsFilled(d.incomingDate.__content), like_Common.iikoDateTimeTo1C(d.incomingDate.__content),
+													Date(1,1,1));
 		newInvoiceStr.transportInvoiceNumber	= d.transportInvoiceNumber.__content;
 		
 		newInvoiceStr.eid						= invoiceItem.eid;

@@ -31,6 +31,11 @@
 				<xr:Common>false</xr:Common>
 			</Visibility>
 		</Command>
+		<Command name="InformationRegister.like_documentsMatching.StandardCommand.OpenList">
+			<Visibility>
+				<xr:Common>false</xr:Common>
+			</Visibility>
+		</Command>
 		<Command name="Catalog.like_connections.StandardCommand.Create">
 			<Visibility>
 				<xr:Common>true</xr:Common>
@@ -39,8 +44,7 @@
 	</CommandsVisibility>
 	<SubsystemsOrder>
 		<Subsystem>Subsystem.like_Лайка.Subsystem.Catalogs</Subsystem>
-		<Subsystem>75f37641-2b58-4b6e-8694-4b52c83d43ce</Subsystem>
+		<Subsystem>Subsystem.like_Лайка.Subsystem.Download</Subsystem>
 		<Subsystem>Subsystem.like_Лайка.Subsystem.About</Subsystem>
-		<Subsystem>Subsystem.like_Лайка.Subsystem.Exchange</Subsystem>
 	</SubsystemsOrder>
 </CommandInterface>

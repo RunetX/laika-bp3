@@ -23,7 +23,7 @@
 		<property xmlns:d3p1="https://izi.cloud/iiko/reading/incomingInvoice" name="invoice" type="d3p1:nullableType"/>
 		<property xmlns:d3p1="https://izi.cloud/iiko/reading/incomingInvoice" name="employeePassToAccount" type="d3p1:nullableType"/>
 		<property xmlns:d3p1="https://izi.cloud/iiko/reading/incomingInvoice" name="incomingDocumentNumber" type="d3p1:nullableType"/>
-		<property name="incomingDate" type="xs:string"/>
+		<property xmlns:d3p1="https://izi.cloud/iiko/reading/incomingInvoice" name="incomingDate" type="d3p1:nullableType"/>
 		<property xmlns:d3p1="https://izi.cloud/iiko/reading/incomingInvoice" name="deliveryOnTime" type="d3p1:nullableType"/>
 		<property xmlns:d3p1="https://izi.cloud/iiko/reading/incomingInvoice" name="matchesToTheOrder" type="d3p1:nullableType"/>
 		<property name="manualDueDate" type="xs:boolean"/>
@@ -46,7 +46,7 @@
 		<property xmlns:d3p1="https://izi.cloud/iiko/reading/incomingInvoice" name="product" type="d3p1:refType"/>
 		<property name="amount" type="xs:decimal"/>
 		<property xmlns:d3p1="https://izi.cloud/iiko/reading/incomingInvoice" name="amountUnit" type="d3p1:refType"/>
-		<property xmlns:d3p1="https://izi.cloud/iiko/reading/incomingInvoice" name="containerId" type="d3p1:refType"/>
+		<property xmlns:d3p1="https://izi.cloud/iiko/reading/incomingInvoice" name="containerId" type="d3p1:nullableType"/>
 		<property xmlns:d3p1="https://izi.cloud/iiko/reading/incomingInvoice" name="invoice" type="d3p1:invoiceType"/>
 		<property xmlns:d3p1="https://izi.cloud/iiko/reading/incomingInvoice" name="store" type="d3p1:refType"/>
 		<property name="code" type="xs:string"/>

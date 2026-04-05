@@ -1,5 +1,5 @@
 ﻿///////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019, ООО Изи Клауд, https://izi.cloud
+// Copyright (c) 2021, ООО Изи Клауд, https://izi.cloud
 // All rights reserved. This program and accompanying materials 
 // are subject to license terms Attribution 4.0 International (CC BY 4.0)
 // The license text is available here:
@@ -362,6 +362,20 @@ Function FillRefs(entitiesTable)
 	                   |			AND eTable.connection = like_products.connection
 	                   |WHERE
 	                   |	eTable.entityType = ""PRODUCT""
+	                   |
+	                   |UNION
+	                   |
+	                   |SELECT
+	                   |	like_products.UUID,
+	                   |	like_products.Ref,
+	                   |	like_products.revision
+	                   |FROM
+	                   |	eTable AS eTable
+	                   |		INNER JOIN Catalog.like_products AS like_products
+	                   |		ON eTable.id = like_products.UUID
+	                   |			AND eTable.connection = like_products.connection
+	                   |WHERE
+	                   |	eTable.entityType = ""PRODUCTGROUP""
 	                   |
 	                   |UNION
 	                   |

@@ -1,5 +1,5 @@
 ﻿///////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019, ООО Изи Клауд, https://izi.cloud
+// Copyright (c) 2021, ООО Изи Клауд, https://izi.cloud
 // All rights reserved. This program and accompanying materials 
 // are subject to license terms Attribution 4.0 International (CC BY 4.0)
 // The license text is available here:
@@ -83,5 +83,295 @@ Function FindByCodeAndConnection(CatalogName, code) Export
 	FindSelection = FindQuery.Execute().Select();
 	FindSelection.Next();
 	Return FindSelection.UUID;
+	
+EndFunction
+
+Function GetInvoiceNumberAndID(connection, ref1C) Export
+	
+	foundMatch = like_DocumentAtServer.GetDocumentMatching(ref1C);
+	
+	If foundMatch = Undefined Then
+		Return New Structure("id, number, documentData, isNew",
+							String(New UUID), like_Common.Translit(ref1C.Number), Undefined, True);
+	EndIf;
+						
+	documentData = like_DocumentAtServer.GetDocumentDateCreatedAndUUID(foundMatch);
+	
+	If documentData = Undefined Then
+		Return New Structure("id, number, documentData, isNew",
+							String(New UUID),
+							foundMatch.number,
+							Undefined,
+							True);	
+	EndIf;
+	
+	Return New Structure("id, number, documentData, isNew",
+							documentData.id,
+							documentData.documentNumber,
+							documentData,
+							False);
+	
+EndFunction
+
+Function GetIncomingInvoicesRequisites(documentsList) Export 
+	
+	tableManager = New TempTablesManager;
+	requisitesQuery = New Query;
+	requisitesQuery.TempTablesManager = tableManager;
+	requisitesQuery.Text = "SELECT DISTINCT
+	                       |	PurchaseGoodsServices.Контрагент AS ref1C
+	                       |INTO typeDependentRequisites
+	                       |FROM
+	                       |	Document.ПоступлениеТоваровУслуг AS PurchaseGoodsServices
+	                       |WHERE
+	                       |	PurchaseGoodsServices.Ref IN(&invoicesList)
+	                       |
+	                       |UNION
+	                       |
+	                       |SELECT DISTINCT
+	                       |	PurchaseGoodsServices.Склад
+	                       |FROM
+	                       |	Document.ПоступлениеТоваровУслуг AS PurchaseGoodsServices
+	                       |WHERE
+	                       |	PurchaseGoodsServices.Ref IN(&invoicesList)
+	                       |;
+	                       |
+	                       |////////////////////////////////////////////////////////////////////////////////
+	                       |SELECT DISTINCT
+	                       |	Goods.Номенклатура AS ref1C
+	                       |INTO typeUndependentRequisites
+	                       |FROM
+	                       |	Document.ПоступлениеТоваровУслуг.Товары AS Goods
+	                       |WHERE
+	                       |	Goods.Ref IN(&invoicesList)
+	                       |
+	                       |UNION
+	                       |
+	                       |SELECT DISTINCT
+	                       |	Goods.Номенклатура.ЕдиницаИзмерения
+	                       |FROM
+	                       |	Document.ПоступлениеТоваровУслуг.Товары AS Goods
+	                       |WHERE
+	                       |	Goods.Ref IN(&invoicesList)";
+	requisitesQuery.SetParameter("invoicesList", documentsList);
+	requisitesQuery.Execute();
+	
+	Return tableManager;
+	
+EndFunction
+
+Function GetSaleOfGoodsDocumentRequisites(documentsList) Export
+
+	tableManager = New TempTablesManager;
+	requisitesQuery = New Query;
+	requisitesQuery.TempTablesManager = tableManager;
+	requisitesQuery.Text = "SELECT DISTINCT
+	                       |	SaleOfGoods.Контрагент AS ref1C
+	                       |INTO typeDependentRequisites
+	                       |FROM
+	                       |	Document.РеализацияТоваровУслуг AS SaleOfGoods
+	                       |WHERE
+	                       |	SaleOfGoods.Ref IN(&documentsList)
+	                       |
+	                       |UNION
+	                       |
+	                       |SELECT DISTINCT
+	                       |	SaleOfGoods.Организация
+	                       |FROM
+	                       |	Document.РеализацияТоваровУслуг AS SaleOfGoods
+	                       |WHERE
+	                       |	SaleOfGoods.Ref IN(&documentsList)
+	                       |;
+	                       |
+	                       |////////////////////////////////////////////////////////////////////////////////
+	                       |SELECT DISTINCT
+	                       |	Goods.Номенклатура AS ref1C
+	                       |INTO typeUndependentRequisites
+	                       |FROM
+	                       |	Document.РеализацияТоваровУслуг.Товары AS Goods
+	                       |WHERE
+	                       |	Goods.Ref IN(&documentsList)
+	                       |
+	                       |UNION
+	                       |
+	                       |SELECT DISTINCT
+	                       |	Goods.Номенклатура.ЕдиницаИзмерения
+	                       |FROM
+	                       |	Document.РеализацияТоваровУслуг.Товары AS Goods
+	                       |WHERE
+	                       |	Goods.Ref IN(&documentsList)";
+	requisitesQuery.SetParameter("documentsList", documentsList);
+	requisitesQuery.Execute();
+	
+	Return tableManager;
+	
+EndFunction
+
+Function GetIncomingInvoiceXDTO(ref1C, documentStructure, matchedObjects) Export
+	                                           
+	document 						= like_CreatingObjects.CreateXDTOObject("invoiceType");
+	document.cls 					= "IncomingInvoice";
+	document.eid 					= documentStructure.id;
+	document.incomingDocumentNumber = ref1C.НомерВходящегоДокумента;   
+	document.supplier 				= like_CommonAtServer.GetMatchedObject(matchedObjects, ref1C.Контрагент).UUID;
+	document.defaultStore 			= like_CommonAtServer.GetMatchedObject(matchedObjects, ref1C.Склад).UUID;
+	document.dateIncoming 			= Format(ref1C.Дата,"DF=yyyy-MM-ddTHH:mm:ss.000+03.00");
+	document.documentNumber			= documentStructure.number;
+	document.status 				= "NEW";
+	document.comment 				= "Создана Лайкой. " + ref1C.Комментарий;
+	document.id 					= documentStructure.id;
+	
+	tsNotes = like_CreatingObjects.CreateXDTOObject("invoiceItemsType");
+	ppNumber  = 0;
+	
+	For each product In ref1C.Товары Do
+		likeProduct = like_CommonAtServer.GetMatchedObject(matchedObjects, product.Номенклатура);
+		If likeProduct = Undefined Then
+			Continue;
+		EndIf;
+		
+		ppNumber = ppNumber + 1;
+		
+		note = like_CreatingObjects.CreateXDTOObject("invoiceItemType");
+		note.cls 			 = "IncomingInvoiceItem";
+		elementID 			 = String(New UUID);
+		note.eid 			 = elementID;
+		//note.store		 	 = like_CommonAtServer.GetMatchedObject(matchedObjects, product.Склад).UUID;
+		note.store = document.defaultStore;
+		note.code 		 	 = likeProduct.code;
+		note.sum			 = product.Сумма;
+		note.ndsPercent 	 = УчетНДСВызовСервераПовтИсп.ПолучитьСтавкуНДС(product.СтавкаНДС);
+		note.sumWithoutNds 	 = product.Сумма-product.СуммаНДС;
+		note.price		 	 = product.Цена;
+		note.priceWithoutNds = Round(note.sumWithoutNds/product.Количество, 2);
+		
+		incomingInvoiceRef 	 	= like_CreatingObjects.CreateXDTOObject("invoiceItemInvoiceType");
+		incomingInvoiceRef.cls 	= "IncomingInvoice";
+		incomingInvoiceRef.eid 	= documentStructure.id;
+		
+		note.invoice 		= incomingInvoiceRef;
+		note.discountSum	= 0;
+		note.actualAmount 	= product.Количество;
+		note.amountUnit 	= like_CommonAtServer.GetMatchedObject(matchedObjects, product.Номенклатура.ЕдиницаИзмерения).UUID;
+		note.num 			= ppNumber;
+		note.product 		= likeProduct.UUID;
+		note.amount 		= product.Количество;
+		note.id 			= elementID;
+		
+		tsNotes.i.Add(note);
+	EndDo;		
+	                
+	document.items = tsNotes;
+	Return document;
+	
+EndFunction
+
+Function IncomingInvoiceXDTOBySalesDocument(ref1C, documentStructure, matchedObjects) Export
+
+	document 						= like_CreatingObjects.CreateXDTOObject("invoiceType");
+	document.cls 					= "IncomingInvoice";
+	document.eid 					= documentStructure.id;
+	document.supplier 				= like_CommonAtServer.GetMatchedObject(matchedObjects, ref1C.Организация).UUID;
+	document.defaultStore 			= like_CommonAtServer.GetMatchedObject(matchedObjects, ref1C.Контрагент).UUID;
+	document.dateIncoming 			= Format(ref1C.Дата,"DF=yyyy-MM-ddTHH:mm:ss.000+03.00");
+	document.documentNumber			= documentStructure.number;
+	document.status 				= "NEW";
+	document.comment 				= "Создана Лайкой. " + ref1C.Комментарий;
+	document.id 					= documentStructure.id;
+
+	tsNotes = like_CreatingObjects.CreateXDTOObject("invoiceItemsType");
+	ppNumber  = 0;
+	
+	For each product In ref1C.Товары Do
+		likeProduct = like_CommonAtServer.GetMatchedObject(matchedObjects, product.Номенклатура);
+		If likeProduct = Undefined Then
+			Continue;
+		EndIf;
+
+		ppNumber = ppNumber + 1;
+
+		note = like_CreatingObjects.CreateXDTOObject("invoiceItemType");
+		note.cls 			 = "IncomingInvoiceItem";
+		elementID 			 = String(New UUID);
+		note.eid 			 = elementID;
+		//note.store		 	 = like_CommonAtServer.GetMatchedObject(matchedObjects, product.Склад).UUID;
+		note.store			 = document.defaultStore;
+		note.code 		 	 = likeProduct.code;
+		note.sum			 = product.СуммаСНДС;
+		note.ndsPercent 	 = УчетНДСВызовСервераПовтИсп.ПолучитьСтавкуНДС(product.СтавкаНДС);
+		note.sumWithoutNds 	 = product.Сумма;
+		note.price		 	 = product.Цена;
+		note.priceWithoutNds = Round(note.sumWithoutNds/product.Количество, 2);
+
+		incomingInvoiceRef 	 	= like_CreatingObjects.CreateXDTOObject("invoiceItemInvoiceType");
+		incomingInvoiceRef.cls 	= "IncomingInvoice";
+		incomingInvoiceRef.eid 	= documentStructure.id;
+
+		note.invoice 		= incomingInvoiceRef;
+		note.discountSum	= 0;
+		note.actualAmount 	= product.Количество;
+		note.amountUnit 	= like_CommonAtServer.GetMatchedObject(matchedObjects, product.Номенклатура.ЕдиницаИзмерения).UUID;
+		note.num 			= ppNumber;
+		note.product 		= likeProduct.UUID;
+		note.amount 		= product.Количество;
+		note.id 			= elementID;
+
+		tsNotes.i.Add(note);
+	EndDo;
+
+	document.items = tsNotes;
+	Return document;
+
+EndFunction
+
+Procedure SendInvoices2IIKO(invoicesList) Export
+
+	activeConnection = like_ConnectionAtServer.GetActiveConnecton();
+	If activeConnection = Undefined Then
+		Return;
+	EndIf;
+
+	invoicesRequisitesTempTable = GetIncomingInvoicesRequisites(invoicesList);
+	matchedObjects = like_DocumentAtServer.GetMatchedObjects(activeConnection, 
+															 invoicesRequisitesTempTable,
+															 MatchingTypeByDocumentsList(invoicesList));
+	
+	For Each invoice In invoicesList Do
+		like_DocumentAtServer.SaveOrUpdateDocument(activeConnection, invoice, matchedObjects);	
+	EndDo;
+
+EndProcedure
+
+Procedure SendSalesInvoices2IIKO(documentsList) Export
+
+	activeConnection = like_ConnectionAtServer.GetActiveConnecton();
+	If activeConnection = Undefined Then
+		Return;
+	EndIf;
+	
+	documentsRequisitesTempTable = GetSaleOfGoodsDocumentRequisites(documentsList);
+	matchedObjects = like_DocumentAtServer.GetMatchedObjects(activeConnection, 
+															 documentsRequisitesTempTable,
+															 MatchingTypeByDocumentsList(documentsList));
+
+	For Each document In documentsList Do
+		like_DocumentAtServer.SaveOrUpdateDocument(activeConnection, document, matchedObjects);	
+	EndDo;
+
+EndProcedure
+
+Function MatchingTypeByDocumentsList(documentsList) Export
+
+	If documentsList.Count() = 0 Then
+		Return Undefined;
+	EndIf;
+
+	If TypeOf(documentsList[0]) = Type("DocumentRef.ПоступлениеТоваровУслуг") Then
+		Return "Поступление";
+	ElsIf TypeOf(documentsList[0]) = Type("DocumentRef.РеализацияТоваровУслуг") Then
+		Return "Реализация";
+	Else
+		Return Undefined;
+	EndIf;
 	
 EndFunction

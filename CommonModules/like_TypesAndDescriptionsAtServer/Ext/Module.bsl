@@ -1,5 +1,5 @@
 ﻿///////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019, ООО Изи Клауд, https://izi.cloud
+// Copyright (c) 2021, ООО Изи Клауд, https://izi.cloud
 // All rights reserved. This program and accompanying materials 
 // are subject to license terms Attribution 4.0 International (CC BY 4.0)
 // The license text is available here:
@@ -62,5 +62,17 @@ EndFunction
 Function GetDescription(descriptionKey) Export
 	
 	Return GetDescriptionMap().Get(descriptionKey);
+	
+EndFunction
+
+Function GetTableWithColumns(columnsString) Export
+	
+	dsc = GetDescriptionMap();
+	newTable = New ValueTable;
+	For each nameType In StrSplit(columnsString, "|") Do		
+		nameTypeList = StrSplit(nameType, ";");
+		newTable.Columns.Add(nameTypeList[0], dsc.Get(nameTypeList[1]));	
+	EndDo;
+	Return newTable;
 	
 EndFunction

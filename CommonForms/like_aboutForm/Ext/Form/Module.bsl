@@ -5,7 +5,7 @@ EndProcedure
 
 &AtServer
 Procedure OnCreateAtServer(Cancel, StandardProcessing)
-	extensions = ConfigurationExtensions.Get(New Structure("Name", "Лайка"));
+	extensions = ConfigurationExtensions.Get(New Structure("Name", "ЛайкаБП"));
 	If ValueIsFilled(extensions) Then
 		cExtension = New ConfigurationMetadataObject(extensions[0].GetData());
 		

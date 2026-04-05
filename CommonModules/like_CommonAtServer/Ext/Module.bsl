@@ -1,5 +1,5 @@
 ﻿///////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2019, ООО Изи Клауд, https://izi.cloud
+// Copyright (c) 2021, ООО Изи Клауд, https://izi.cloud
 // All rights reserved. This program and accompanying materials 
 // are subject to license terms Attribution 4.0 International (CC BY 4.0)
 // The license text is available here:
@@ -30,6 +30,17 @@ EndFunction
 Function GetStructureWithFields(fieldsString) Export
 	
 	Return New Structure(fieldsString);
+	
+EndFunction
+
+Function GetTableDescription(columnsString) Export
+	
+	parametersTable = New ValueTable;
+	For Each column In StrSplit(columnsString, ",") Do
+		parametersTable.Columns.Add(column);
+	EndDo;
+	
+	Return parametersTable;	
 	
 EndFunction
 
@@ -95,6 +106,18 @@ Function GetIikoDate(date1C, ms) Export
 	datePart1 = Left(IIKODate, 19);
 	datePart2 = Right(IIKODate, 6);
 	Return datePart1 + "." + ms + datePart2;
+	
+EndFunction
+
+Function GetMatchedObject(matchedObjects, ref1C) Export
+	           
+	foundRow = matchedObjects.Find(ref1C, "ref1C");
+	
+	If foundRow = Undefined Then
+		Return Undefined;
+	EndIf;
+	
+	Return foundRow.likeRef;
 	
 EndFunction
 

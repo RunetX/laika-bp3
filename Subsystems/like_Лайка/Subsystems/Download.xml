@@ -18,6 +18,7 @@
 			<Content>
 				<xr:Item xsi:type="xr:MDObjectRef">DataProcessor.like_invoicesDownload</xr:Item>
 				<xr:Item xsi:type="xr:MDObjectRef">DataProcessor.like_downloadSalesAndPrepays</xr:Item>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.ПоступлениеТоваровУслуг</xr:Item>
 			</Content>
 		</Properties>
 		<ChildObjects/>
