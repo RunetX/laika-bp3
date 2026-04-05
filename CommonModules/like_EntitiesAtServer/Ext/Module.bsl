@@ -236,7 +236,7 @@ Function FillRefs(entitiesTable)
 	                   |	entitiesTable.description AS description,
 	                   |	entitiesTable.parentID AS parentID,
 	                   |	entitiesTable.accountingCategoryID AS accountingCategoryID,
-					   |	entitiesTable.isCash AS isCash,
+	                   |	entitiesTable.isCash AS isCash,
 	                   |	entitiesTable.mainUnitID AS mainUnitID,
 	                   |	entitiesTable.productType AS productType,
 	                   |	entitiesTable.userSupplierType AS userSupplierType,
@@ -252,87 +252,144 @@ Function FillRefs(entitiesTable)
 	                   |
 	                   |////////////////////////////////////////////////////////////////////////////////
 	                   |SELECT
-	                   |	eTable.id AS id,
+	                   |	Accounts.UUID AS UUID,
 	                   |	Accounts.Ref AS Ref,
 	                   |	Accounts.revision AS revision
 	                   |INTO tmpRefs
 	                   |FROM
 	                   |	eTable AS eTable
-	                   |		LEFT JOIN Catalog.like_accounts AS Accounts
+	                   |		INNER JOIN Catalog.like_accounts AS Accounts
 	                   |		ON eTable.id = Accounts.UUID
 	                   |			AND eTable.connection = Accounts.connection
+	                   |WHERE
+	                   |	eTable.entityType = ""ACCOUNT""
 	                   |
 	                   |UNION
 	                   |
 	                   |SELECT
-	                   |	eTable.id,
+	                   |	accountingCategories.UUID,
 	                   |	accountingCategories.Ref,
 	                   |	accountingCategories.revision
 	                   |FROM
 	                   |	eTable AS eTable
-	                   |		LEFT JOIN Catalog.like_accountingCategories AS accountingCategories
+	                   |		INNER JOIN Catalog.like_accountingCategories AS accountingCategories
 	                   |		ON eTable.id = accountingCategories.UUID
 	                   |			AND eTable.connection = accountingCategories.connection
+	                   |WHERE
+	                   |	eTable.entityType = ""ACCOUNTINGCATEGORY""
 	                   |
 	                   |UNION
 	                   |
 	                   |SELECT
-	                   |	eTable.id,
-	                   |	Conceptions.Ref,
-	                   |	Conceptions.revision
+	                   |	paymentTypes.UUID,
+	                   |	paymentTypes.Ref,
+	                   |	paymentTypes.revision
 	                   |FROM
 	                   |	eTable AS eTable
-	                   |		LEFT JOIN Catalog.like_conceptions AS Conceptions
-	                   |		ON eTable.id = Conceptions.UUID
-	                   |			AND eTable.connection = Conceptions.connection
+	                   |		INNER JOIN Catalog.like_paymentTypes AS paymentTypes
+	                   |		ON eTable.id = paymentTypes.UUID
+	                   |			AND eTable.connection = paymentTypes.connection
+	                   |WHERE
+	                   |	(eTable.entityType = ""CASHPAYMENTTYPE""
+	                   |			OR eTable.entityType = ""NONCASHPAYMENTTYPE"")
 	                   |
 	                   |UNION
 	                   |
 	                   |SELECT
-	                   |	eTable.id,
-	                   |	measureUnits.Ref,
-	                   |	measureUnits.revision
+	                   |	like_cashRegisters.UUID,
+	                   |	like_cashRegisters.Ref,
+	                   |	like_cashRegisters.revision
 	                   |FROM
 	                   |	eTable AS eTable
-	                   |		LEFT JOIN Catalog.like_measureUnits AS measureUnits
-	                   |		ON eTable.id = measureUnits.UUID
-	                   |			AND eTable.connection = measureUnits.connection
+	                   |		INNER JOIN Catalog.like_cashRegisters AS like_cashRegisters
+	                   |		ON eTable.id = like_cashRegisters.UUID
+	                   |			AND eTable.connection = like_cashRegisters.connection
+	                   |WHERE
+	                   |	eTable.entityType = ""CASHREGISTER""
 	                   |
 	                   |UNION
 	                   |
 	                   |SELECT
-	                   |	eTable.id,
-	                   |	Products.Ref,
-	                   |	Products.revision
+	                   |	like_conceptions.UUID,
+	                   |	like_conceptions.Ref,
+	                   |	like_conceptions.revision
 	                   |FROM
 	                   |	eTable AS eTable
-	                   |		LEFT JOIN Catalog.like_products AS Products
-	                   |		ON eTable.id = Products.UUID
-	                   |			AND eTable.connection = Products.connection
+	                   |		INNER JOIN Catalog.like_conceptions AS like_conceptions
+	                   |		ON eTable.id = like_conceptions.UUID
+	                   |			AND eTable.connection = like_conceptions.connection
+	                   |WHERE
+	                   |	eTable.entityType = ""CONCEPTION""
 	                   |
 	                   |UNION
 	                   |
 	                   |SELECT
-	                   |	eTable.id,
-	                   |	Stores.Ref,
-	                   |	Stores.revision
+	                   |	like_departments.UUID,
+	                   |	like_departments.Ref,
+	                   |	like_departments.revision
 	                   |FROM
 	                   |	eTable AS eTable
-	                   |		LEFT JOIN Catalog.like_stores AS Stores
-	                   |		ON eTable.id = Stores.UUID
-	                   |			AND eTable.connection = Stores.connection
+	                   |		INNER JOIN Catalog.like_departments AS like_departments
+	                   |		ON eTable.id = like_departments.UUID
+	                   |			AND eTable.connection = like_departments.connection
+	                   |WHERE
+	                   |	eTable.entityType = ""DEPARTMENT""
 	                   |
 	                   |UNION
 	                   |
 	                   |SELECT
-	                   |	eTable.id,
-	                   |	Users.Ref,
-	                   |	Users.revision
+	                   |	like_measureUnits.UUID,
+	                   |	like_measureUnits.Ref,
+	                   |	like_measureUnits.revision
 	                   |FROM
 	                   |	eTable AS eTable
-	                   |		LEFT JOIN Catalog.like_users AS Users
-	                   |		ON eTable.id = Users.UUID
-	                   |			AND eTable.connection = Users.connection
+	                   |		INNER JOIN Catalog.like_measureUnits AS like_measureUnits
+	                   |		ON eTable.id = like_measureUnits.UUID
+	                   |			AND eTable.connection = like_measureUnits.connection
+	                   |WHERE
+	                   |	eTable.entityType = ""MEASUREUNIT""
+	                   |
+	                   |UNION
+	                   |
+	                   |SELECT
+	                   |	like_products.UUID,
+	                   |	like_products.Ref,
+	                   |	like_products.revision
+	                   |FROM
+	                   |	eTable AS eTable
+	                   |		INNER JOIN Catalog.like_products AS like_products
+	                   |		ON eTable.id = like_products.UUID
+	                   |			AND eTable.connection = like_products.connection
+	                   |WHERE
+	                   |	eTable.entityType = ""PRODUCT""
+	                   |
+	                   |UNION
+	                   |
+	                   |SELECT
+	                   |	like_stores.UUID,
+	                   |	like_stores.Ref,
+	                   |	like_stores.revision
+	                   |FROM
+	                   |	eTable AS eTable
+	                   |		INNER JOIN Catalog.like_stores AS like_stores
+	                   |		ON eTable.id = like_stores.UUID
+	                   |			AND eTable.connection = like_stores.connection
+	                   |WHERE
+	                   |	eTable.entityType = ""STORE""
+	                   |
+	                   |UNION
+	                   |
+	                   |SELECT
+	                   |	like_users.UUID,
+	                   |	like_users.Ref,
+	                   |	like_users.revision
+	                   |FROM
+	                   |	eTable AS eTable
+	                   |		INNER JOIN Catalog.like_users AS like_users
+	                   |		ON eTable.id = like_users.UUID
+	                   |			AND eTable.connection = like_users.connection
+	                   |WHERE
+	                   |	eTable.entityType = ""USER""
 	                   |;
 	                   |
 	                   |////////////////////////////////////////////////////////////////////////////////
@@ -349,10 +406,8 @@ Function FillRefs(entitiesTable)
 	                   |	eT.description AS Description,
 	                   |	eT.parentID AS parentID,
 	                   |	eT.accountingCategoryID AS accountingCategoryID,
-	                   |	accountingCategories.Ref AS accountingCategory,
-					   |	eT.isCash AS isCash,
+	                   |	eT.isCash AS isCash,
 	                   |	eT.mainUnitID AS mainUnitID,
-	                   |	measureUnits.Ref AS mainUnit,
 	                   |	eT.productType AS type,
 	                   |	eT.userSupplierType AS supplierType,
 	                   |	eT.userIsClient AS client,
@@ -363,13 +418,7 @@ Function FillRefs(entitiesTable)
 	                   |FROM
 	                   |	eTable AS eT
 	                   |		LEFT JOIN tmpRefs AS tmpRefs
-	                   |		ON eT.id = tmpRefs.id
-	                   |		LEFT JOIN Catalog.like_accountingCategories AS accountingCategories
-	                   |		ON eT.accountingCategoryID = accountingCategories.UUID
-	                   |		LEFT JOIN Catalog.like_measureUnits AS measureUnits
-	                   |		ON eT.mainUnitID = measureUnits.UUID");
-	
-	
+	                   |		ON eT.id = tmpRefs.UUID");
 	fQuery.SetParameter("entitiesTable", entitiesTable);
 	Return fQuery.Execute().Unload();
 	
@@ -445,11 +494,27 @@ Procedure ExeItems(updateItems, connection, revision) Export
 		If entityItem.revision > entity.revision Then
 			excludeFields = ?(entityItem.isContainer, "accountingCategoryID,mainUnitID,type", "");
 			FillPropertyValues(entity, entityItem,, excludeFields);
-			If entity.Metadata().Attributes.Find("ParentID") <> Undefined Then
-				If entity.Parent.isEmpty() AND ValueIsFilled(entity.ParentID) Then
-					entity.Parent = Catalogs[entityItem.catalogName].GetRef(New UUID(entity.ParentID));
+			
+			If entityItem.Ref = Null Then
+				If entity.Metadata().Attributes.Find("ParentID") <> Undefined Then
+					If ValueIsFilled(entity.ParentID) Then
+						entity.Parent = Catalogs[entityItem.catalogName].GetRef(New UUID(entity.ParentID));
+					EndIf;
+				EndIf;
+				
+				If entity.Metadata().Attributes.Find("accountingCategoryID") <> Undefined Then
+					If ValueIsFilled(entity.accountingCategoryID) Then
+						entity.accountingCategory = Catalogs.like_accountingCategories.GetRef(New UUID(entity.accountingCategoryID));
+					EndIf;
+				EndIf;
+				
+				If entity.Metadata().Attributes.Find("mainUnitID") <> Undefined Then
+					If ValueIsFilled(entity.mainUnitID) Then
+						entity.measureUnit = Catalogs.like_measureUnits.GetRef(New UUID(entity.mainUnitID));
+					EndIf;
 				EndIf;
 			EndIf;
+			
 			entity.Write();
 		EndIf;	
 	EndDo;
